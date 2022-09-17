@@ -69,18 +69,19 @@ const searched_course_list = [];
 async function searchCourse(course_name) {
   await getCourse();
   course_data.forEach((course) => {
-    if (course.course_name === course_name) {
+    if (course.course_name === course_name && 
+        course.course_seats > 0) {
       searched_course_list.push(course);
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
       console.log("Audio finished");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 
@@ -95,13 +96,13 @@ async function searchCourseWithFaculty(course_name, course_faculty) {
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
       console.log("Audio finished");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 
@@ -121,13 +122,13 @@ async function searchCourseWithFacultyAndSection(
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
       console.log("Audio finished");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 async function searchCourseWithSection(course_name, course_section) {
@@ -141,13 +142,13 @@ async function searchCourseWithSection(course_name, course_section) {
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
       console.log("Audio finished");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 async function searchCourseWithFacultyAndAvailableSeats(
@@ -165,13 +166,13 @@ async function searchCourseWithFacultyAndAvailableSeats(
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
       console.log("Audio finished");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 
@@ -192,16 +193,19 @@ async function searchCourseWithFacultyAndAvailableSeatsAndSpecificSection(
     }
   });
   if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE"));
+    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
     player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
+      console.log("Audio finished ");
     });
     console.log(searched_course_list);
   } else {
-    chalk.red(console.log("NO"));
+    chalk.red(console.log("NO", course_name));
   }
 }
 
 var timer = setInterval(function () {
   searchCourseWithFacultyAndAvailableSeats("CSE299", "nbm");
+  searchCourse("CSE373")
+//   searchCourse("CSE225")
+// searchCourseWithSection("MAT350","5");
 }, 30000);
