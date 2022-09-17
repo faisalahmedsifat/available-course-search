@@ -1,11 +1,19 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const chalk = require("chalk");
-// const { exec } = require("child_process");
+var nodemailer = require("nodemailer");
+require("dotenv").config();
 var player = require("play-sound")((opts = {}));
 
 const url = "https://rds2.northsouth.edu/index.php/common/showofferedcourses";
 const course_data = [];
+
+const sender_email = process.env.SENDER_EMAIL;
+const sender_password = process.env.SENDER_APP_PASSWORD;
+const reciever_email = process.env.RECIEVER_EMAIL;
+
+var subject = "Course Available";
+var send = true;
 
 async function getCourse() {
   try {
@@ -66,23 +74,15 @@ async function getCourse() {
 }
 
 const searched_course_list = [];
+
 async function searchCourse(course_name) {
   await getCourse();
   course_data.forEach((course) => {
-    if (course.course_name === course_name && 
-        course.course_seats > 0) {
+    if (course.course_name === course_name && course.course_seats > 0) {
       searched_course_list.push(course);
     }
   });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
-    });
-    console.log(searched_course_list);
-  } else {
-    chalk.red(console.log("NO", course_name));
-  }
+  doTheTasks(course_name, null, null);
 }
 
 async function searchCourseWithFaculty(course_name, course_faculty) {
@@ -90,20 +90,13 @@ async function searchCourseWithFaculty(course_name, course_faculty) {
   course_data.forEach((course) => {
     if (
       course.course_name === course_name &&
-      course.course_faculty === course_faculty
+      course.course_faculty === course_faculty &&
+      course.course_seats > 0
     ) {
       searched_course_list.push(course);
     }
   });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
-    });
-    console.log(searched_course_list);
-  } else {
-    chalk.red(console.log("NO", course_name));
-  }
+  doTheTasks(course_name, course_faculty, null);
 }
 
 async function searchCourseWithFacultyAndSection(
@@ -116,96 +109,136 @@ async function searchCourseWithFacultyAndSection(
     if (
       course.course_name === course_name &&
       course.course_faculty === course_faculty &&
-      course.course_section === course_section
+      course.course_section === course_section &&
+      course.course_seats > 0
     ) {
       searched_course_list.push(course);
     }
   });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
-    });
-    console.log(searched_course_list);
-  } else {
-    chalk.red(console.log("NO", course_name));
-  }
+
+  doTheTasks(course_name, course_faculty, course_section);
 }
 async function searchCourseWithSection(course_name, course_section) {
   await getCourse();
   course_data.forEach((course) => {
     if (
       course.course_name === course_name &&
-      course.course_section === course_section
-    ) {
-      searched_course_list.push(course);
-    }
-  });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
-    });
-    console.log(searched_course_list);
-  } else {
-    chalk.red(console.log("NO", course_name));
-  }
-}
-async function searchCourseWithFacultyAndAvailableSeats(
-  course_name,
-  course_faculty
-) {
-  await getCourse();
-  course_data.forEach((course) => {
-    if (
-      course.course_name === course_name &&
-      course.course_faculty === course_faculty &&
+      course.course_section === course_section &&
       course.course_seats > 0
     ) {
       searched_course_list.push(course);
     }
   });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished");
+  doTheTasks(course_name, null, course_section);
+}
+
+function notifyWithEmail(subject, send) {
+  if (send == true) {
+    var transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: sender_email,
+        pass: sender_password,
+      },
     });
-    console.log(searched_course_list);
-  } else {
-    chalk.red(console.log("NO", course_name));
+
+    var mailOptions = {
+      from: sender_email,
+      to: reciever_email,
+      subject: subject,
+      text: "The desired course is available",
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(chalk.red("Email sent: " + info.response));
+      }
+    });
+    send = false;
   }
 }
 
-async function searchCourseWithFacultyAndAvailableSeatsAndSpecificSection(
-  course_name,
-  course_faculty,
-  course_section
-) {
-  await getCourse();
-  course_data.forEach((course) => {
-    if (
-      course.course_name === course_name &&
-      course.course_faculty === course_faculty &&
-      course.course_seats > 0 &&
-      course.course_section === course_section
-    ) {
-      searched_course_list.push(course);
+function doTheTasks(course_name, course_faculty, course_section) {
+  if (course_faculty == null && course_section == null) {
+    if (searched_course_list.length > 0) {
+      console.log(chalk.blue("COURSE IS AVAILABLE", course_name));
+      subject = "Course Available " + course_name;
+      player.play("./warning.wav", function (err) {
+        console.log("Audio finished ");
+      });
+      notifyWithEmail(subject, send);
+      console.log(searched_course_list);
+    } else {
+      console.log(chalk.red("NO", course_name));
     }
-  });
-  if (searched_course_list.length > 0) {
-    chalk.red(console.log("COURSE IS AVAILABLE", course_name));
-    player.play("./warning.wav", function (err) {
-      console.log("Audio finished ");
-    });
-    console.log(searched_course_list);
+  } else if (course_faculty != null && course_section == null) {
+    if (searched_course_list.length > 0) {
+      console.log(
+        chalk.blue("COURSE IS AVAILABLE", course_name, course_faculty)
+      );
+      subject = "Course Available " + course_name + " " + course_faculty;
+      player.play("./warning.wav", function (err) {
+        console.log("Audio finished ");
+      });
+      notifyWithEmail(subject, send);
+      console.log(searched_course_list);
+    } else {
+      console.log(chalk.red("NO", course_name, course_faculty));
+    }
+  } else if (course_faculty == null && course_section != null) {
+    if (searched_course_list.length > 0) {
+      console.log(
+        chalk.blue("COURSE IS AVAILABLE", course_name, course_section)
+      );
+      subject = "Course Available " + course_name + " " + course_section;
+      player.play("./warning.wav", function (err) {
+        console.log("Audio finished ");
+      });
+      notifyWithEmail(subject, send);
+      console.log(searched_course_list);
+    } else {
+      console.log(chalk.red("NO", course_name, course_section));
+    }
   } else {
-    chalk.red(console.log("NO", course_name));
+    if (searched_course_list.length > 0) {
+      console.log(
+        chalk.blue(
+          "COURSE IS AVAILABLE",
+          course_name,
+          course_faculty,
+          course_section
+        )
+      );
+      subject =
+        "Course Available " +
+        course_name +
+        " " +
+        course_faculty +
+        " " +
+        course_section;
+      player.play("./warning.wav", function (err) {
+        console.log("Audio finished ");
+      });
+      notifyWithEmail(subject, send);
+      console.log(searched_course_list);
+    } else {
+      console.log(chalk.red("NO", course_name, course_faculty, course_section));
+    }
   }
 }
+
+// The only Change is needed here,
+// You can add as many courses as you want
+// Also add .env and add "SENDER_EMAIL" and "SENDER_APP_PASSWORD" and "RECIEVER_EMAIL" in .env file
+// "SENDER_APP_PASSWORD" is the app password of your gmail account which you can get from here https://myaccount.google.com/apppasswords
+// 300000 is the time in milliseconds after which the program will run again. It means the code will execute after every 5 minutes
+// but the email will be sent only once when the course is available and the script is running
 
 var timer = setInterval(function () {
-  searchCourseWithFacultyAndAvailableSeats("CSE299", "nbm");
-  searchCourse("CSE373")
-//   searchCourse("CSE225")
-// searchCourseWithSection("MAT350","5");
-}, 30000);
+  //   searchCourseWithFacultyAndAvailableSeats("CSE299", "nbm");
+  searchCourseWithFaculty("CSE299", "nbm");
+  //   searchCourse("CSE373");
+  //   searchCourse("CSE225");
+}, 300000);
