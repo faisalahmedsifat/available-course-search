@@ -11,6 +11,7 @@ const course_data = [];
 const sender_email = process.env.SENDER_EMAIL;
 const sender_password = process.env.SENDER_APP_PASSWORD;
 const reciever_email = process.env.RECIEVER_EMAIL;
+const RUN_INTERVAL = 1000 * 60 * 5;
 
 var subject = "Course Available";
 var send = true;
@@ -132,7 +133,7 @@ async function searchCourseWithSection(course_name, course_section) {
   doTheTasks(course_name, null, course_section);
 }
 
-function notifyWithEmail(subject, send) {
+function notifyWithEmail(subject) {
   if (send == true) {
     var transporter = nodemailer.createTransport({
       service: "gmail",
@@ -168,7 +169,7 @@ function doTheTasks(course_name, course_faculty, course_section) {
       player.play("./warning.wav", function (err) {
         console.log("Audio finished ");
       });
-      notifyWithEmail(subject, send);
+      notifyWithEmail(subject);
       console.log(searched_course_list);
     } else {
       console.log(chalk.red("NO", course_name));
@@ -182,7 +183,7 @@ function doTheTasks(course_name, course_faculty, course_section) {
       player.play("./warning.wav", function (err) {
         console.log("Audio finished ");
       });
-      notifyWithEmail(subject, send);
+      notifyWithEmail(subject);
       console.log(searched_course_list);
     } else {
       console.log(chalk.red("NO", course_name, course_faculty));
@@ -196,7 +197,7 @@ function doTheTasks(course_name, course_faculty, course_section) {
       player.play("./warning.wav", function (err) {
         console.log("Audio finished ");
       });
-      notifyWithEmail(subject, send);
+      notifyWithEmail(subject);
       console.log(searched_course_list);
     } else {
       console.log(chalk.red("NO", course_name, course_section));
@@ -221,7 +222,7 @@ function doTheTasks(course_name, course_faculty, course_section) {
       player.play("./warning.wav", function (err) {
         console.log("Audio finished ");
       });
-      notifyWithEmail(subject, send);
+      notifyWithEmail(subject);
       console.log(searched_course_list);
     } else {
       console.log(chalk.red("NO", course_name, course_faculty, course_section));
@@ -238,7 +239,7 @@ function doTheTasks(course_name, course_faculty, course_section) {
 
 var timer = setInterval(function () {
   //   searchCourseWithFacultyAndAvailableSeats("CSE299", "nbm");
-  searchCourseWithFaculty("CSE299", "nbm");
+//   searchCourseWithFaculty("CSE299", "nbm");
   //   searchCourse("CSE373");
-  //   searchCourse("CSE225");
-}, 300000);
+    searchCourse("CSE225");
+}, RUN_INTERVAL);
